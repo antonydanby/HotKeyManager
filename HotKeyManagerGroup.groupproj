@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{98CBBE37-2F9D-4222-9001-299950986246}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Demo\HotKeyManagerDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="HotKeyManager.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="HotKeyManagerDemo">
+        <MSBuild Projects="Demo\HotKeyManagerDemo.dproj"/>
+    </Target>
+    <Target Name="HotKeyManagerDemo:Clean">
+        <MSBuild Projects="Demo\HotKeyManagerDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HotKeyManagerDemo:Make">
+        <MSBuild Projects="Demo\HotKeyManagerDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="HotKeyManager">
+        <MSBuild Projects="HotKeyManager.dproj"/>
+    </Target>
+    <Target Name="HotKeyManager:Clean">
+        <MSBuild Projects="HotKeyManager.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HotKeyManager:Make">
+        <MSBuild Projects="HotKeyManager.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="HotKeyManagerDemo;HotKeyManager"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="HotKeyManagerDemo:Clean;HotKeyManager:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="HotKeyManagerDemo:Make;HotKeyManager:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
