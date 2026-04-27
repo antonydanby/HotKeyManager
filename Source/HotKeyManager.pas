@@ -23,12 +23,12 @@ type
 
   THotKeyManager = class(TComponent)
   private
-    FHandle: HWND;
-    FHotKeys: TDictionary<Integer, THotKeyRecord>;
-    FNextHotKeyID: Integer;
-    FOnHotKey: THotKeyNotifyEvent;
-    FOnKeyCaptured: TKeyCapturedEvent;
-    FIsCapturing: Boolean;
+    fHandle: HWND;
+    fHotKeys: TDictionary<Integer, THotKeyRecord>;
+    fNextHotKeyID: Integer;
+    fOnHotKey: THotKeyNotifyEvent;
+    fOnKeyCaptured: TKeyCapturedEvent;
+    fIsCapturing: Boolean;
     procedure WndProc(var Message: TMessage);
   public
     constructor Create(AOwner: TComponent); override;
@@ -89,23 +89,23 @@ end;
 constructor THotKeyManager.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FHotKeys := TDictionary<Integer, THotKeyRecord>.Create;
-  FNextHotKeyID := 1000;
-  FHandle := AllocateHWnd(WndProc);
-  FIsCapturing := False;
+  fHotKeys := TDictionary<Integer, THotKeyRecord>.Create;
+  fNextHotKeyID := 1000;
+  fHandle := AllocateHWnd(WndProc);
+  fIsCapturing := False;
 end;
 
 destructor THotKeyManager.Destroy;
 begin
   UnregisterAll;
-  DeallocateHWnd(FHandle);
+  DeallocateHWnd(fHandle);
   FHotKeys.Free;
   inherited Destroy;
 end;
 
 procedure THotKeyManager.StartCapture;
 begin
-  FIsCapturing := True;
+  fIsCapturing := True;
 end;
 
 procedure THotKeyManager.StopCapture;
@@ -120,7 +120,7 @@ var
   VKey: Word;
 begin
   // While capturing, we watch for KeyDown events on our hidden handle
-  if FIsCapturing and ((Message.Msg = WM_KEYDOWN) or (Message.Msg = WM_SYSKEYDOWN)) then
+  if fIsCapturing and ((Message.Msg = WM_KEYDOWN) or (Message.Msg = WM_SYSKEYDOWN)) then
   begin
     VKey := Message.WParam;
     
@@ -133,9 +133,8 @@ begin
       if GetKeyState(VK_MENU) < 0 then Include(Mods, hmAlt);
       if (GetKeyState(VK_LWIN) < 0) or (GetKeyState(VK_RWIN) < 0) then Include(Mods, hmWin);
 
-      FIsCapturing := False; // Stop capturing after one valid key
-      if Assigned(FOnKeyCaptured) then
-        FOnKeyCaptured(Self, Mods, VKey);
+      fIsCapturing := False; // Stop capturing after one valid key
+      if Assigned(fOnKeyCaptured) then fOnKeyCaptured(Self, Mods, VKey);
     end;
     Message.Result := 0;
     Exit;
@@ -143,12 +142,12 @@ begin
 
   if Message.Msg = WM_HOTKEY then
   begin
-    if FHotKeys.TryGetValue(Message.WParam, HotKeyRec) then
-      if Assigned(FOnHotKey) then FOnHotKey(Self, HotKeyRec);
+    if fHotKeys.TryGetValue(Message.WParam, HotKeyRec) then
+      if Assigned(fOnHotKey) then fOnHotKey(Self, HotKeyRec);
     Message.Result := 0;
   end
   else
-    Message.Result := DefWindowProc(FHandle, Message.Msg, Message.WParam, Message.LParam);
+    Message.Result := DefWindowProc(fHandle, Message.Msg, Message.WParam, Message.LParam);
 end;
 
 function THotKeyManager.Register(Modifiers: Word; VirtualKey: Word; RaiseOnError: Boolean): Integer;
@@ -158,13 +157,13 @@ var
 begin
   Result := 0;
   NewID := FNextHotKeyID;
-  if Winapi.Windows.RegisterHotKey(FHandle, NewID, Modifiers, VirtualKey) then
+  if Winapi.Windows.RegisterHotKey(fHandle, NewID, Modifiers, VirtualKey) then
   begin
     HotKeyRec.KeyID := NewID;
     HotKeyRec.VirtualKey := VirtualKey;
     HotKeyRec.Modifiers := Modifiers;
-    FHotKeys.Add(NewID, HotKeyRec);
-    Inc(FNextHotKeyID);
+    fHotKeys.Add(NewID, HotKeyRec);
+    Inc(fNextHotKeyID);
     Result := NewID;
   end
   else if RaiseOnError then
@@ -177,7 +176,8 @@ begin
 end;
 
 function THotKeyManager.Register(Modifiers: THKModifiers; VirtualKey: Word; RaiseOnError: Boolean): Integer;
-var WinMods: Word;
+var
+  WinMods: Word;
 begin
   WinMods := 0;
   if hmControl in Modifiers then WinMods := WinMods or MOD_CONTROL;
@@ -189,15 +189,15 @@ end;
 
 function THotKeyManager.Unregister(HotKeyID: Integer): Boolean;
 begin
-  Result := Winapi.Windows.UnregisterHotKey(FHandle, HotKeyID);
-  if Result then FHotKeys.Remove(HotKeyID);
+  Result := Winapi.Windows.UnregisterHotKey(fHandle, HotKeyID);
+  if Result then fHotKeys.Remove(HotKeyID);
 end;
 
 procedure THotKeyManager.UnregisterAll;
 var ID: Integer;
 begin
-  for ID in FHotKeys.Keys do Winapi.Windows.UnregisterHotKey(FHandle, ID);
-  FHotKeys.Clear;
+  for ID in FHotKeys.Keys do Winapi.Windows.UnregisterHotKey(fHandle, ID);
+  fHotKeys.Clear;
 end;
 
 end.
